@@ -1,31 +1,50 @@
+"use client";
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useApplications } from "@/context";
 
-interface DashboardStatsProps {
-  applicationCount: number;
-  interviewCount: number;
-  responseRate: number;
-  resumeCount: number;
-}
-
-export function DashboardStats({ 
-  applicationCount, 
-  interviewCount, 
-  responseRate, 
-  resumeCount 
-}: DashboardStatsProps) {
-  // Define stats based on props
+export function DashboardStats() {
+  const { applications } = useApplications();
+  
+  // Calculate stats from real data
+  const totalApplications = applications.length;
+  
+  const interviews = applications.filter(app => 
+    app.status === 'phone_screen' || 
+    app.status === 'interview' || 
+    app.status === 'technical_assessment'
+  ).length;
+  
+  const responseRate = totalApplications > 0 
+    ? Math.round((interviews / totalApplications) * 100) 
+    : 0;
+  
+  // Get applications from the last 7 days
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const oneWeekAgoStr = oneWeekAgo.toISOString().split('T')[0];
+  
+  const newApplications = applications.filter(app => 
+    app.dateIdentified >= oneWeekAgoStr
+  ).length;
+  
+  const newInterviews = applications.filter(app => 
+    (app.status === 'phone_screen' || app.status === 'interview' || app.status === 'technical_assessment') &&
+    app.dateApplied && app.dateApplied >= oneWeekAgoStr
+  ).length;
+  
   const stats = [
     {
       title: "Total Applications",
-      value: applicationCount,
-      change: "+4 this week", // This would be calculated in a real app
+      value: totalApplications,
+      change: `+${newApplications} this week`,
     },
     {
       title: "Interviews",
-      value: interviewCount,
-      change: "+2 this week", // This would be calculated in a real app
+      value: interviews,
+      change: `+${newInterviews} this week`,
     },
     {
       title: "Response Rate",
@@ -33,9 +52,12 @@ export function DashboardStats({
       progress: responseRate,
     },
     {
-      title: "Resumes",
-      value: resumeCount,
-      change: "Last updated today", // This would be calculated in a real app
+      title: "Active Applications",
+      value: applications.filter(app => 
+        app.status !== 'rejected' && 
+        app.status !== 'withdrawn' && 
+        app.status !== 'accepted'
+      ).length,
     },
   ];
 

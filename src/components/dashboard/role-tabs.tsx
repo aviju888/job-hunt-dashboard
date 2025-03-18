@@ -1,16 +1,14 @@
+"use client";
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RoleType } from "@/types";
-import { useApplications } from "@/context";
+import { useApplications, useRoleTypes } from "@/context";
 
-interface RoleTabsProps {
-  roleTypes: RoleType[];
-}
-
-export function RoleTabs({ roleTypes }: RoleTabsProps) {
+export function RoleTabs() {
+  const { roleTypes } = useRoleTypes();
   const { getApplicationsByRoleType } = useApplications();
 
   if (roleTypes.length === 0) {

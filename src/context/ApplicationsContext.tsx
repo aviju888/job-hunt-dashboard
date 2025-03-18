@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Application, ApplicationStatus } from '@/types';
 import { STORAGE_KEYS, getFromStorage, saveToStorage, generateId } from '@/lib/storage';

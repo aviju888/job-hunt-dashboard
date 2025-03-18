@@ -89,7 +89,7 @@ export interface Resume {
   lastUpdated: string;
   selectedExperiences: string[]; // IDs from experience bank
   customSections: {
-    [key: string]: any;
+    [key: string]: unknown;
   };
   skills: string[];
   education: string[]; // IDs from experience bank (education type)

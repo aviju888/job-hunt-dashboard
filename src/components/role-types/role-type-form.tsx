@@ -1,8 +1,14 @@
+"use client";
+
 import React, { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -11,111 +17,81 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { useRoleTypes } from "@/context";
 import { RoleType } from "@/types";
+import { useRoleTypes } from "@/context";
 
-// Schema for form validation
 const roleTypeSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  industry: z.string().min(1, { message: "Industry is required" }),
+  title: z.string().min(1, "Title is required"),
+  industry: z.string().min(1, "Industry is required"),
   description: z.string().optional(),
-  newSkill: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof roleTypeSchema>;
 
 interface RoleTypeFormProps {
   initialData?: RoleType;
-  onClose: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function RoleTypeForm({ initialData, onClose }: RoleTypeFormProps) {
+export function RoleTypeForm({ initialData, onSuccess, onCancel }: RoleTypeFormProps) {
   const { addRoleType, updateRoleType } = useRoleTypes();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [requiredSkills, setRequiredSkills] = useState<string[]>(
-    initialData?.requiredSkills || []
-  );
-  const [preferredSkills, setPreferredSkills] = useState<string[]>(
-    initialData?.preferredSkills || []
-  );
+  const [requiredSkills, setRequiredSkills] = useState<string[]>(initialData?.requiredSkills || []);
+  const [preferredSkills, setPreferredSkills] = useState<string[]>(initialData?.preferredSkills || []);
+  const [newRequiredSkill, setNewRequiredSkill] = useState("");
+  const [newPreferredSkill, setNewPreferredSkill] = useState("");
 
-  // Set default values
-  const defaultValues = {
-    title: initialData?.title || "",
-    industry: initialData?.industry || "",
-    description: initialData?.description || "",
-    newSkill: "",
-  };
-
-  const form = useForm<z.infer<typeof roleTypeSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(roleTypeSchema),
-    defaultValues,
+    defaultValues: {
+      title: initialData?.title || "",
+      industry: initialData?.industry || "",
+      description: initialData?.description || "",
+    },
   });
 
-  // Add a skill to the required skills list
   const addRequiredSkill = () => {
-    const newSkill = form.getValues("newSkill");
-    if (newSkill && !requiredSkills.includes(newSkill)) {
-      setRequiredSkills([...requiredSkills, newSkill]);
-      form.setValue("newSkill", "");
+    if (newRequiredSkill.trim() && !requiredSkills.includes(newRequiredSkill.trim())) {
+      setRequiredSkills([...requiredSkills, newRequiredSkill.trim()]);
+      setNewRequiredSkill("");
     }
   };
 
-  // Add a skill to the preferred skills list
-  const addPreferredSkill = () => {
-    const newSkill = form.getValues("newSkill");
-    if (newSkill && !preferredSkills.includes(newSkill)) {
-      setPreferredSkills([...preferredSkills, newSkill]);
-      form.setValue("newSkill", "");
-    }
-  };
-
-  // Remove a skill from the required skills list
   const removeRequiredSkill = (skill: string) => {
     setRequiredSkills(requiredSkills.filter((s) => s !== skill));
   };
 
-  // Remove a skill from the preferred skills list
+  const addPreferredSkill = () => {
+    if (newPreferredSkill.trim() && !preferredSkills.includes(newPreferredSkill.trim())) {
+      setPreferredSkills([...preferredSkills, newPreferredSkill.trim()]);
+      setNewPreferredSkill("");
+    }
+  };
+
   const removePreferredSkill = (skill: string) => {
     setPreferredSkills(preferredSkills.filter((s) => s !== skill));
   };
 
-  // Form submit handler
-  const onSubmit = async (data: z.infer<typeof roleTypeSchema>) => {
-    setIsSubmitting(true);
-    
-    try {
-      const roleTypeData = {
-        title: data.title,
-        industry: data.industry,
-        description: data.description,
-        requiredSkills,
-        preferredSkills,
-        salaryRange: initialData?.salaryRange || {
-          min: 0,
-          max: 0,
-          currency: "USD",
-        },
-        targetCompanies: initialData?.targetCompanies || [],
-        jobBoards: initialData?.jobBoards || [],
-        searchKeywords: initialData?.searchKeywords || [],
-        associatedResumes: initialData?.associatedResumes || [],
-        notes: initialData?.notes || "",
-      };
+  const onSubmit = (values: FormValues) => {
+    const roleTypeData = {
+      ...values,
+      requiredSkills,
+      preferredSkills,
+      salaryRange: initialData?.salaryRange || { min: 0, max: 0, currency: "USD" },
+      targetCompanies: initialData?.targetCompanies || [],
+      jobBoards: initialData?.jobBoards || [],
+      searchKeywords: initialData?.searchKeywords || [],
+      associatedResumes: initialData?.associatedResumes || [],
+    };
 
-      if (initialData) {
-        // Update existing role type
-        updateRoleType(initialData.id, roleTypeData);
-      } else {
-        // Add new role type
-        addRoleType(roleTypeData);
-      }
-      
-      onClose();
-    } catch (error) {
-      console.error("Error saving role type:", error);
-    } finally {
-      setIsSubmitting(false);
+    if (initialData) {
+      updateRoleType(initialData.id, roleTypeData);
+    } else {
+      addRoleType(roleTypeData);
+    }
+
+    if (onSuccess) {
+      onSuccess();
     }
   };
 
@@ -127,7 +103,7 @@ export function RoleTypeForm({ initialData, onClose }: RoleTypeFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role Title</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Frontend Developer" {...field} />
               </FormControl>
@@ -157,75 +133,97 @@ export function RoleTypeForm({ initialData, onClose }: RoleTypeFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Input placeholder="Brief description of the role" {...field} />
+                <Textarea
+                  placeholder="Describe the role type..."
+                  className="resize-none"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div>
-          <FormLabel>Skills</FormLabel>
-          <div className="flex gap-2 mt-2">
-            <FormField
-              control={form.control}
-              name="newSkill"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormControl>
-                    <Input placeholder="Add a skill" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="button" variant="outline" onClick={addRequiredSkill}>
-              + Required
-            </Button>
-            <Button type="button" variant="outline" onClick={addPreferredSkill}>
-              + Preferred
-            </Button>
-          </div>
-        </div>
-
         <div className="space-y-4">
           <div>
-            <h4 className="text-sm font-medium mb-2">Required Skills</h4>
-            <div className="flex flex-wrap gap-2">
-              {requiredSkills.length === 0 ? (
+            <FormLabel>Required Skills</FormLabel>
+            <div className="flex mt-2 mb-2">
+              <Input
+                placeholder="Add a required skill"
+                value={newRequiredSkill}
+                onChange={(e) => setNewRequiredSkill(e.target.value)}
+                className="flex-1 mr-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addRequiredSkill();
+                  }
+                }}
+              />
+              <Button type="button" onClick={addRequiredSkill}>
+                Add
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {requiredSkills.map((skill) => (
+                <Badge key={skill} variant="secondary" className="px-3 py-1">
+                  {skill}
+                  <X
+                    className="ml-2 h-3 w-3 cursor-pointer"
+                    onClick={() => removeRequiredSkill(skill)}
+                  />
+                </Badge>
+              ))}
+              {requiredSkills.length === 0 && (
                 <p className="text-sm text-muted-foreground">No required skills added</p>
-              ) : (
-                requiredSkills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeRequiredSkill(skill)}>
-                    {skill} ×
-                  </Badge>
-                ))
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium mb-2">Preferred Skills</h4>
-            <div className="flex flex-wrap gap-2">
-              {preferredSkills.length === 0 ? (
+            <FormLabel>Preferred Skills</FormLabel>
+            <div className="flex mt-2 mb-2">
+              <Input
+                placeholder="Add a preferred skill"
+                value={newPreferredSkill}
+                onChange={(e) => setNewPreferredSkill(e.target.value)}
+                className="flex-1 mr-2"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addPreferredSkill();
+                  }
+                }}
+              />
+              <Button type="button" onClick={addPreferredSkill}>
+                Add
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {preferredSkills.map((skill) => (
+                <Badge key={skill} variant="outline" className="px-3 py-1">
+                  {skill}
+                  <X
+                    className="ml-2 h-3 w-3 cursor-pointer"
+                    onClick={() => removePreferredSkill(skill)}
+                  />
+                </Badge>
+              ))}
+              {preferredSkills.length === 0 && (
                 <p className="text-sm text-muted-foreground">No preferred skills added</p>
-              ) : (
-                preferredSkills.map((skill) => (
-                  <Badge key={skill} variant="outline" className="cursor-pointer" onClick={() => removePreferredSkill(skill)}>
-                    {skill} ×
-                  </Badge>
-                ))
               )}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" type="button" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : initialData ? "Update Role" : "Add Role"}
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit">
+            {initialData ? "Update Role Type" : "Create Role Type"}
           </Button>
         </div>
       </form>

@@ -1,104 +1,102 @@
+"use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { 
-  LayoutDashboard, 
-  Briefcase, 
-  FileText, 
-  Users, 
-  BookOpen,
-  Settings,
-  Plus
+import {
+  LayoutDashboard,
+  Briefcase,
+  FileText,
+  GraduationCap,
+  Users,
+  PlusCircle,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { RoleTypeForm } from "@/components/role-types/role-type-form";
+import { RoleTypeDialog } from "@/components/role-types/role-type-dialog";
+
+const navItems = [
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Applications",
+    href: "/applications",
+    icon: Briefcase,
+  },
+  {
+    title: "Experience",
+    href: "/experience",
+    icon: GraduationCap,
+  },
+  {
+    title: "Resume",
+    href: "/resume",
+    icon: FileText,
+  },
+  {
+    title: "Networking",
+    href: "/networking",
+    icon: Users,
+  },
+];
 
 export function Sidebar() {
+  const pathname = usePathname();
   const [isRoleFormOpen, setIsRoleFormOpen] = useState(false);
 
-  const navItems = [
-    {
-      title: "Dashboard",
-      href: "/",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    },
-    {
-      title: "Applications",
-      href: "/applications",
-      icon: <Briefcase className="h-5 w-5" />,
-    },
-    {
-      title: "Experience Bank",
-      href: "/experience",
-      icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      title: "Resume Manager",
-      href: "/resume",
-      icon: <FileText className="h-5 w-5" />,
-    },
-    {
-      title: "Networking",
-      href: "/networking",
-      icon: <Users className="h-5 w-5" />,
-    },
-    {
-      title: "Resources",
-      href: "/resources",
-      icon: <BookOpen className="h-5 w-5" />,
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: <Settings className="h-5 w-5" />,
-    },
-  ];
-
   return (
-    <div className="w-64 h-screen bg-background border-r flex flex-col">
-      <div className="p-4 border-b">
-        <h1 className="font-bold text-xl">Job Hunt Dashboard</h1>
-      </div>
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {navItems.map((item) => (
-            <li key={item.href}>
-              <Link href={item.href}>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start gap-2 font-normal"
-                >
-                  {item.icon}
-                  {item.title}
-                </Button>
+    <div className="pb-12 min-h-screen">
+      <div className="space-y-4 py-4">
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-xl font-semibold tracking-tight">
+            Job Hunt Dashboard
+          </h2>
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                  pathname === item.href ? "bg-accent text-accent-foreground" : "transparent"
+                )}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.title}
               </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="p-4 space-y-2 border-t">
-        <Dialog open={isRoleFormOpen} onOpenChange={setIsRoleFormOpen}>
-          <DialogContent className="sm:max-w-[700px]">
-            <DialogHeader>
-              <DialogTitle>Create New Role Type</DialogTitle>
-            </DialogHeader>
-            <RoleTypeForm onClose={() => setIsRoleFormOpen(false)} />
-          </DialogContent>
-        </Dialog>
-        
-        <Button 
-          variant="outline" 
-          className="w-full justify-start gap-2"
-          onClick={() => setIsRoleFormOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          New Role Type
-        </Button>
-        
-        <Button className="w-full">
-          + New Application
-        </Button>
+            ))}
+          </div>
+        </div>
+        <div className="px-4 py-2">
+          <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight">
+            Actions
+          </h2>
+          <div className="space-y-1">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => setIsRoleFormOpen(true)}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Role Type
+            </Button>
+            <Link href="/applications/new">
+              <Button variant="outline" className="w-full justify-start">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Application
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
+      
+      <RoleTypeDialog 
+        open={isRoleFormOpen} 
+        onOpenChange={setIsRoleFormOpen} 
+      />
     </div>
   );
 } 

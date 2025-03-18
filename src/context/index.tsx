@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { ApplicationsProvider } from './ApplicationsContext';
 import { ExperienceProvider } from './ExperienceContext';

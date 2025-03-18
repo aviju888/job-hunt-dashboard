@@ -54,7 +54,7 @@ The application follows a feature-based organization:
 
 ## Current Status
 
-This is a RSVP that demonstrates the core UI and structure of the application. The following pages are implemented:
+This is a Rapid Simple Viable Product (RSVP) that demonstrates the core UI and structure of the application. The following pages are implemented:
 
 - Dashboard overview
 - Applications tracking
@@ -72,3 +72,6 @@ All data is currently mocked and not persistent. This is a frontend-only impleme
 - Create export functionality for resumes
 - Implement role type creation and management
 
+## License
+
+MIT 
